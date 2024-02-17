@@ -1,61 +1,67 @@
 .data
     A:  .space 400      # 100 integers * 4 bytes
-    nl: .asciiz "\n"
+    nl: .asciiz "\n" 
+# Assumptions
+# The array A is assumed to be an array of 32-bit integers.
+#The code assumes the MIPS system has system calls for printing integers (syscall 1).
+#The avg calculation assumes the sum of elements can be stored in a 32-bit integer. If the sum exceeds the range, overflow may occur.
+
 
 .text
     main:
-        # Assume array A starts at address 200
-        la $a0, A           # Load the base address of the array into $a0
-        li $a1, 100         # Set the array size to 100
+        # Array A starts at address 200. Load the base address into $a0, and array size is set to 100
+        la $a0, A
+        li $a1, 100
 
         jal calculate_stats
 
         # Exit
         li $v0, 10
         syscall
-
+# Initializing
 calculate_stats:
-        li $v0, 0           # Initialize highest value
-        li $v1, 0           # Initialize lowest value
-        li $t2, -1          # Initialize highest index
-        li $t3, -1          # Initialize lowest index
-        li $t4, 0           # Initialize sum for average
+        li $v0, 0           # highest value
+        li $v1, 0           # lowest value
+        li $t2, -1          # highest index
+        li $t3, -1          # lowest index
+        li $t4, 0           # sum for average
 
     loop:
-        lw $t0, 0($a0)      # Load the current element into $t0
-        addi $a0, $a0, 4    # Move to the next element
+        lw $t0, 0($a0)
+        addi $a0, $a0, 4
 
-        # Update highest value and index
+        # Index, Highest value update, check
         bge $t0, $v0, update_highest
         j check_lowest
 
     update_highest:
-        move $v0, $t0       # Update highest value
-        li $t2, 0           # Update highest index
+        move $v0, $t0       # value
+        li $t2, 0           # index
         j check_lowest
 
     check_lowest:
-        # Check for lowest value and index
+        
         ble $t0, $v1, update_lowest
         j update_average
 
     update_lowest:
-        move $v1, $t0       # Update lowest value
-        li $t3, 0           # Update lowest index
+        move $v1, $t0       
+        li $t3, 0          
         j update_average
 
     update_average:
-        add $t4, $t4, $t0   # Add the current element to the sum
+        add $t4, $t4, $t0   
 
         # Loop control
-        addi $a1, $a1, -1    # Decrement array size
-        bnez $a1, loop       # If array size is not zero, continue the loop
+        addi $a1, $a1, -1    # Decreasing arr size
+        bnez $a1, loop       # Array size not 0 means loop continues
 
-        # Calculate average
-        divu $t4, $t4, 100   # Divide the sum by the array size
-        mflo $t4            # Move the quotient to $t4 (average)
+        # average
+        divu $t4, $t4, 100   
+        mflo $t4            # quotient to $t4 (average)
 
-        # Print the results
+        #finally results
+
         li $v0, 4
         la $a0, nl
         syscall
@@ -100,5 +106,5 @@ calculate_stats:
         move $a0, $t4
         syscall
 
-        jr $ra               # Return
+        jr $ra               
 
